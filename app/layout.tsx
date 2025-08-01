@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Architects_Daughter } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
-const poppins = Poppins({
-	weight: ["100", "200", "300", "400", "500", "600", "700", "800"],
+const poppins = Architects_Daughter({
+	weight: ["400"],
 	subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-	title: "Vynspire AI",
-	description: "Frontend Developer Assessment - Nimesh Maharjan",
+	title: "Vynspire - Modern Blog Platform",
+	description: "A modern, responsive blog platform for developers",
 };
 
 export default function RootLayout({
@@ -18,8 +19,17 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
-			<body className={`${poppins.className} antialiased`}>{children}</body>
+		<html lang="en" suppressHydrationWarning>
+			<body className={`${poppins.className} antialiased`}>
+				<ThemeProvider
+					attribute="class"
+					defaultTheme="system"
+					enableSystem
+					disableTransitionOnChange
+				>
+					{children}
+				</ThemeProvider>
+			</body>
 		</html>
 	);
 }
