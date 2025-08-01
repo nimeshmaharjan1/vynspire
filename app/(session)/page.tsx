@@ -133,7 +133,7 @@ const categories = [
 ];
 
 export default function Dashboard() {
-	const [posts, setPosts] = useState<BlogPost[]>(mockPosts);
+	const [posts, _setPosts] = useState<BlogPost[]>(mockPosts);
 	const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>(mockPosts);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedCategory, setSelectedCategory] = useState("All");
@@ -187,12 +187,10 @@ export default function Dashboard() {
 					<Badge variant="secondary">{post.category}</Badge>
 					<span className="text-sm text-muted-foreground">{post.readTime}</span>
 				</div>
-				<CardTitle className="line-clamp-2 group-hover:text-primary transition-colors">
+				<CardTitle className="group-hover:text-primary transition-colors">
 					{post.title}
 				</CardTitle>
-				<CardDescription className="line-clamp-3">
-					{post.excerpt}
-				</CardDescription>
+				<CardDescription className="">{post.excerpt}</CardDescription>
 			</CardHeader>
 			<CardContent className="pt-0">
 				<div className="flex items-center justify-between">
@@ -240,12 +238,10 @@ export default function Dashboard() {
 								{post.readTime}
 							</span>
 						</div>
-						<h3 className="font-semibold text-lg mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+						<h3 className="font-semibold text-lg mb-2 group-hover:text-foreground transition-colors">
 							{post.title}
 						</h3>
-						<p className="text-muted-foreground text-sm line-clamp-2 mb-3">
-							{post.excerpt}
-						</p>
+						<p className="text-muted-foreground text-sm mb-3">{post.excerpt}</p>
 						<div className="flex items-center justify-between">
 							<div className="flex items-center space-x-2">
 								<Avatar className="h-5 w-5">

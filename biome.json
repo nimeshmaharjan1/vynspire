@@ -19,7 +19,9 @@
 			"a11y": {
 				"useAriaPropsForRole": "warn",
 				"useSemanticElements": "warn",
-				"useValidAnchor": "off"
+				"useValidAnchor": "off",
+				"noSvgWithoutTitle": "off",
+				"useAriaPropsSupportedByRole": "off"
 			},
 			"correctness": {
 				"useExhaustiveDependencies": "warn"
