@@ -1,18 +1,7 @@
 "use client";
 
-import {
-	Filter,
-	Grid,
-	List,
-	Moon,
-	Plus,
-	Search,
-	Sun,
-	User,
-} from "lucide-react";
+import { Filter, Grid, List, Search } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
-import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -24,14 +13,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -159,7 +140,6 @@ export default function Dashboard() {
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 	const [currentPage, setCurrentPage] = useState(1);
 	const postsPerPage = 6;
-	const { theme, setTheme } = useTheme();
 
 	useEffect(() => {
 		let filtered = posts;
@@ -298,177 +278,127 @@ export default function Dashboard() {
 	);
 
 	return (
-		<div className="min-h-screen bg-background">
-			{/* Header */}
-			<header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-				<div className="container mx-auto px-4 py-4">
-					<div className="flex items-center justify-between">
-						<div className="flex items-center space-x-4">
-							<h1 className="text-2xl font-bold">Vynspire Blogs</h1>
-						</div>
-						<div className="flex items-center space-x-4">
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-							>
-								<Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-								<Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-								<span className="sr-only">Toggle theme</span>
-							</Button>
-							<Link href="/create">
-								<Button>
-									<Plus className="h-4 w-4 mr-2" />
-									New Post
-								</Button>
-							</Link>
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button variant="ghost" size="icon">
-										<User className="h-5 w-5" />
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end">
-									<DropdownMenuLabel>My Account</DropdownMenuLabel>
-									<DropdownMenuSeparator />
-									<DropdownMenuItem>Profile</DropdownMenuItem>
-									<DropdownMenuItem>Settings</DropdownMenuItem>
-									<DropdownMenuSeparator />
-									<Link href="/login">
-										<DropdownMenuItem>Sign Out</DropdownMenuItem>
-									</Link>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						</div>
-					</div>
+		<>
+			{/* Search and Filters */}
+			<div className="flex flex-col sm:flex-row gap-4 mb-8">
+				<div className="relative flex-1">
+					<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+					<Input
+						placeholder="Search posts, tags, or authors..."
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						className="pl-10"
+					/>
 				</div>
-			</header>
-
-			{/* Main Content */}
-			<main className="container mx-auto px-4 py-8">
-				{/* Search and Filters */}
-				<div className="flex flex-col sm:flex-row gap-4 mb-8">
-					<div className="relative flex-1">
-						<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-						<Input
-							placeholder="Search posts, tags, or authors..."
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							className="pl-10"
-						/>
-					</div>
-					<Select value={selectedCategory} onValueChange={setSelectedCategory}>
-						<SelectTrigger className="w-full sm:w-48">
-							<Filter className="h-4 w-4 mr-2" />
-							<SelectValue placeholder="Category" />
-						</SelectTrigger>
-						<SelectContent>
-							{categories.map((category) => (
-								<SelectItem key={category} value={category}>
-									{category}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-					<div className="flex gap-2">
-						<Button
-							variant={viewMode === "grid" ? "default" : "outline"}
-							size="icon"
-							onClick={() => setViewMode("grid")}
-						>
-							<Grid className="h-4 w-4" />
-						</Button>
-						<Button
-							variant={viewMode === "list" ? "default" : "outline"}
-							size="icon"
-							onClick={() => setViewMode("list")}
-						>
-							<List className="h-4 w-4" />
-						</Button>
-					</div>
+				<Select value={selectedCategory} onValueChange={setSelectedCategory}>
+					<SelectTrigger className="w-full sm:w-48">
+						<Filter className="h-4 w-4 mr-2" />
+						<SelectValue placeholder="Category" />
+					</SelectTrigger>
+					<SelectContent>
+						{categories.map((category) => (
+							<SelectItem key={category} value={category}>
+								{category}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+				<div className="flex gap-2">
+					<Button
+						variant={viewMode === "grid" ? "default" : "outline"}
+						size="icon"
+						onClick={() => setViewMode("grid")}
+					>
+						<Grid className="h-4 w-4" />
+					</Button>
+					<Button
+						variant={viewMode === "list" ? "default" : "outline"}
+						size="icon"
+						onClick={() => setViewMode("list")}
+					>
+						<List className="h-4 w-4" />
+					</Button>
 				</div>
+			</div>
 
-				{/* Results Info */}
-				<div className="mb-6">
-					<p className="text-muted-foreground">
-						Showing {currentPosts.length} of {filteredPosts.length} posts
-						{selectedCategory !== "All" && ` in ${selectedCategory}`}
-						{searchQuery && ` matching "${searchQuery}"`}
+			{/* Results Info */}
+			<div className="mb-6">
+				<p className="text-muted-foreground">
+					Showing {currentPosts.length} of {filteredPosts.length} posts
+					{selectedCategory !== "All" && ` in ${selectedCategory}`}
+					{searchQuery && ` matching "${searchQuery}"`}
+				</p>
+			</div>
+
+			{/* Blog Posts */}
+			{currentPosts.length === 0 ? (
+				<div className="text-center py-12">
+					<p className="text-muted-foreground text-lg">
+						No posts found matching your criteria.
 					</p>
+					<Button
+						className="mt-4"
+						onClick={() => {
+							setSearchQuery("");
+							setSelectedCategory("All");
+						}}
+					>
+						Clear Filters
+					</Button>
 				</div>
+			) : (
+				<>
+					{viewMode === "grid" ? (
+						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+							{currentPosts.map((post) => (
+								<BlogPostCard key={post.id} post={post} />
+							))}
+						</div>
+					) : (
+						<div className="space-y-4 mb-8">
+							{currentPosts.map((post) => (
+								<BlogPostListItem key={post.id} post={post} />
+							))}
+						</div>
+					)}
 
-				{/* Blog Posts */}
-				{currentPosts.length === 0 ? (
-					<div className="text-center py-12">
-						<p className="text-muted-foreground text-lg">
-							No posts found matching your criteria.
-						</p>
-						<Button
-							className="mt-4"
-							onClick={() => {
-								setSearchQuery("");
-								setSelectedCategory("All");
-							}}
-						>
-							Clear Filters
-						</Button>
-					</div>
-				) : (
-					<>
-						{viewMode === "grid" ? (
-							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-								{currentPosts.map((post) => (
-									<BlogPostCard key={post.id} post={post} />
-								))}
+					{/* Pagination */}
+					{totalPages > 1 && (
+						<div className="flex justify-center items-center space-x-2">
+							<Button
+								variant="outline"
+								onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+								disabled={currentPage === 1}
+							>
+								Previous
+							</Button>
+							<div className="flex space-x-1">
+								{Array.from({ length: totalPages }, (_, i) => i + 1).map(
+									(page) => (
+										<Button
+											key={page}
+											variant={currentPage === page ? "default" : "outline"}
+											size="sm"
+											onClick={() => setCurrentPage(page)}
+										>
+											{page}
+										</Button>
+									),
+								)}
 							</div>
-						) : (
-							<div className="space-y-4 mb-8">
-								{currentPosts.map((post) => (
-									<BlogPostListItem key={post.id} post={post} />
-								))}
-							</div>
-						)}
-
-						{/* Pagination */}
-						{totalPages > 1 && (
-							<div className="flex justify-center items-center space-x-2">
-								<Button
-									variant="outline"
-									onClick={() =>
-										setCurrentPage((prev) => Math.max(prev - 1, 1))
-									}
-									disabled={currentPage === 1}
-								>
-									Previous
-								</Button>
-								<div className="flex space-x-1">
-									{Array.from({ length: totalPages }, (_, i) => i + 1).map(
-										(page) => (
-											<Button
-												key={page}
-												variant={currentPage === page ? "default" : "outline"}
-												size="sm"
-												onClick={() => setCurrentPage(page)}
-											>
-												{page}
-											</Button>
-										),
-									)}
-								</div>
-								<Button
-									variant="outline"
-									onClick={() =>
-										setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-									}
-									disabled={currentPage === totalPages}
-								>
-									Next
-								</Button>
-							</div>
-						)}
-					</>
-				)}
-			</main>
-		</div>
+							<Button
+								variant="outline"
+								onClick={() =>
+									setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+								}
+								disabled={currentPage === totalPages}
+							>
+								Next
+							</Button>
+						</div>
+					)}
+				</>
+			)}
+		</>
 	);
 }
