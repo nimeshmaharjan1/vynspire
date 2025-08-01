@@ -1,0 +1,2 @@
+pnpm ci:check --staged
+pnpm build
