@@ -1,6 +1,7 @@
 "use client";
 
-import { Moon, Sun, User } from "lucide-react";
+import { Computer, Moon, Plus, Sun, User } from "lucide-react";
+import Link from "next/link";
 import { useTheme } from "next-themes";
 import type { PropsWithChildren } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,12 +14,13 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/auth/use-auth.hook";
+import { useGlobalStore } from "@/store/global.store";
 import PostCreateDialog from "./_components/posts/create-dialog";
 
 export default function SessionLayout({ children }: PropsWithChildren) {
 	const { theme, setTheme } = useTheme();
 	const { loading, isAuthenticated, logout } = useAuth(true); // true → protected route
-
+	const { setShowDialog, showDialog } = useGlobalStore();
 	if (loading)
 		return (
 			<div className="h-screen flex items-center justify-center">
@@ -33,9 +35,12 @@ export default function SessionLayout({ children }: PropsWithChildren) {
 			<header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
 				<div className="container mx-auto px-4 py-4">
 					<div className="flex items-center justify-between">
-						<div className="flex items-center space-x-4">
-							<h1 className="text-2xl font-bold">Vynspire Blogs</h1>
-						</div>
+						<Link href={`/`} passHref>
+							<div className="flex items-center space-x-4">
+								<Computer className="!size-7" />
+								<h1 className="text-2xl font-bold">Vynspire Blogs</h1>
+							</div>
+						</Link>
 						<div className="flex items-center space-x-4">
 							<Button
 								variant="ghost"
@@ -47,7 +52,11 @@ export default function SessionLayout({ children }: PropsWithChildren) {
 								<span className="sr-only">Toggle theme</span>
 							</Button>
 							{/* NOTE Handled the alert dialog for create post dialog here */}
-							<PostCreateDialog></PostCreateDialog>
+							<Button onClick={() => setShowDialog("create")}>
+								<Plus className="h-4 w-4 mr-2" />
+								New Post
+							</Button>
+							{showDialog === "create" && <PostCreateDialog></PostCreateDialog>}
 
 							<DropdownMenu>
 								<DropdownMenuTrigger asChild>

@@ -9,5 +9,6 @@ export const registerSchema = z.object({
 		.string()
 		.min(1, "Password is required")
 		.max(20, "Password cannot be more than 20 characters"),
+	avatar: z.string().optional().nullable(),
 });
 export type registerSchemaType = z.infer<typeof registerSchema>;

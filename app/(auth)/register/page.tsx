@@ -1,6 +1,6 @@
 "use client";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { AlertCircleIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
+import axiosInstance from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth/use-auth.store";
 import type { authSuccessResponseType } from "@/types/response.types";
@@ -39,6 +40,22 @@ function RegisterPage() {
 			email: "",
 			password: "",
 			user_name: "",
+			avatar: "",
+		},
+	});
+	const query = useQuery({
+		queryKey: ["get-avatar"],
+		queryFn: async () => {
+			const res = await axiosInstance.get(
+				`https://randomuser.me/api/?inc=picture`,
+			);
+			return res.data as {
+				results: {
+					picture: {
+						thumbnail: string;
+					};
+				}[];
+			};
 		},
 	});
 	const router = useRouter();
@@ -49,7 +66,15 @@ function RegisterPage() {
 		}>,
 		registerSchemaType
 	>({
-		mutationFn: (payload) => register(payload),
+		mutationFn: (payload) => {
+			const _payload = {
+				...payload,
+				avatar:
+					query.data?.results?.[0]?.picture?.thumbnail ??
+					`https://randomuser.me/api/portraits/thumb/lego/5.jpg`,
+			};
+			return register(_payload);
+		},
 		onSuccess: (data) => {
 			toast.success("Registration successful logging you in");
 			useAuthStore.getState().login(data.token, data.user);
@@ -66,9 +91,9 @@ function RegisterPage() {
 				<CardContent>
 					<Form {...form}>
 						<form
-							onSubmit={form.handleSubmit((values) =>
-								registerMutation.mutate(values),
-							)}
+							onSubmit={form.handleSubmit((values) => {
+								registerMutation.mutate(values);
+							})}
 						>
 							<div className="grid gap-6">
 								<div className="grid gap-6">

@@ -1,8 +1,11 @@
 "use client";
 
-import { Filter, Grid, List, Search } from "lucide-react";
+import { DotsVerticalIcon } from "@radix-ui/react-icons";
+import { EyeIcon, Filter, PenIcon, Search, TrashIcon } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useDebounce } from "use-debounce";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +16,12 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -21,107 +30,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-
-interface BlogPost {
-	id: string;
-	title: string;
-	excerpt: string;
-	content: string;
-	author: string;
-	authorAvatar: string;
-	publishedAt: string;
-	category: string;
-	tags: string[];
-	readTime: string;
-	image: string;
-}
-
-const mockPosts: BlogPost[] = [
-	{
-		id: "1",
-		title: "Getting Started with Next.js 14",
-		excerpt:
-			"Learn the fundamentals of Next.js 14 and build modern web applications with the latest features.",
-		content: "Full content here...",
-		author: "John Doe",
-		authorAvatar: "/placeholder.svg?height=40&width=40",
-		publishedAt: "2024-01-15",
-		category: "Development",
-		tags: ["Next.js", "React", "JavaScript"],
-		readTime: "5 min read",
-		image: "https://images.pexels.com/photos/1779487/pexels-photo-1779487.jpeg",
-	},
-	{
-		id: "2",
-		title: "Mastering TypeScript in 2024",
-		excerpt:
-			"Advanced TypeScript patterns and best practices for building scalable applications.",
-		content: "Full content here...",
-		author: "Jane Smith",
-		authorAvatar: "/placeholder.svg?height=40&width=40",
-		publishedAt: "2024-01-12",
-		category: "Programming",
-		tags: ["TypeScript", "JavaScript", "Programming"],
-		readTime: "8 min read",
-		image: "/placeholder.svg?height=200&width=400&text=TypeScript+Guide",
-	},
-	{
-		id: "3",
-		title: "Building Responsive UIs with Tailwind CSS",
-		excerpt:
-			"Create beautiful, responsive user interfaces using Tailwind CSS utility classes.",
-		content: "Full content here...",
-		author: "Mike Johnson",
-		authorAvatar: "/placeholder.svg?height=40&width=40",
-		publishedAt: "2024-01-10",
-		category: "Design",
-		tags: ["CSS", "Tailwind", "UI/UX"],
-		readTime: "6 min read",
-		image: "/placeholder.svg?height=200&width=400&text=Tailwind+CSS",
-	},
-	{
-		id: "4",
-		title: "Database Design Best Practices",
-		excerpt:
-			"Learn how to design efficient and scalable database schemas for modern applications.",
-		content: "Full content here...",
-		author: "Sarah Wilson",
-		authorAvatar: "/placeholder.svg?height=40&width=40",
-		publishedAt: "2024-01-08",
-		category: "Backend",
-		tags: ["Database", "SQL", "Architecture"],
-		readTime: "10 min read",
-		image: "/placeholder.svg?height=200&width=400&text=Database+Design",
-	},
-	{
-		id: "5",
-		title: "React Server Components Explained",
-		excerpt:
-			"Understanding React Server Components and how they improve performance and user experience.",
-		content: "Full content here...",
-		author: "Alex Chen",
-		authorAvatar: "/placeholder.svg?height=40&width=40",
-		publishedAt: "2024-01-05",
-		category: "Development",
-		tags: ["React", "Server Components", "Performance"],
-		readTime: "7 min read",
-		image: "/placeholder.svg?height=200&width=400&text=React+Server+Components",
-	},
-	{
-		id: "6",
-		title: "API Security Best Practices",
-		excerpt:
-			"Essential security measures to protect your APIs from common vulnerabilities and attacks.",
-		content: "Full content here...",
-		author: "David Brown",
-		authorAvatar: "/placeholder.svg?height=40&width=40",
-		publishedAt: "2024-01-03",
-		category: "Security",
-		tags: ["API", "Security", "Backend"],
-		readTime: "9 min read",
-		image: "https://images.pexels.com/photos/1779487/pexels-photo-1779487.jpeg",
-	},
-];
+import { useGetAllPosts } from "@/hooks/posts/use-get-all-posts";
+import type { PostWithAuthor } from "@/services/posts.services";
+import { useAuthStore } from "@/store/auth/use-auth.store";
+import { useGlobalStore } from "@/store/global.store";
+import DeleteDialog from "./_components/posts/delete-dialog";
+import PostEditDialog from "./_components/posts/edit-dialog";
 
 const categories = [
 	"All",
@@ -133,148 +47,152 @@ const categories = [
 ];
 
 export default function Dashboard() {
-	const [posts, _setPosts] = useState<BlogPost[]>(mockPosts);
-	const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>(mockPosts);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [debouncedSearch] = useDebounce(searchQuery, 500); // ⏱️ 500ms debounce
 	const [selectedCategory, setSelectedCategory] = useState("All");
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 	const [currentPage, setCurrentPage] = useState(1);
 	const postsPerPage = 6;
 
+	const postQuery = useGetAllPosts({
+		search: debouncedSearch,
+		category: selectedCategory !== "All" ? selectedCategory : undefined,
+		page: currentPage,
+		limit: postsPerPage,
+	});
 	useEffect(() => {
-		let filtered = posts;
-
-		// Filter by search query
-		if (searchQuery) {
-			filtered = filtered.filter(
-				(post) =>
-					post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					post.tags.some((tag) =>
-						tag.toLowerCase().includes(searchQuery.toLowerCase()),
-					),
-			);
-		}
-
-		// Filter by category
-		if (selectedCategory !== "All") {
-			filtered = filtered.filter((post) => post.category === selectedCategory);
-		}
-
-		setFilteredPosts(filtered);
 		setCurrentPage(1);
-	}, [searchQuery, selectedCategory, posts]);
+	}, [debouncedSearch, selectedCategory]);
 
-	const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
-	const startIndex = (currentPage - 1) * postsPerPage;
-	const currentPosts = filteredPosts.slice(
-		startIndex,
-		startIndex + postsPerPage,
-	);
+	const posts = postQuery.data?.posts || [];
+	const total = postQuery.data?.total || 0;
+	const totalPages = Math.ceil(total / postsPerPage);
+	const { setShowDialog, showDialog, selectedPost, setSelectedPost } =
+		useGlobalStore();
+	const currentUser = useAuthStore((state) => state.user);
+	const BlogPostCard = ({ post }: { post: PostWithAuthor }) => {
+		const isAuthor = currentUser?.id === post.authorId;
 
-	const BlogPostCard = ({ post }: { post: BlogPost }) => (
-		<Card className="group hover:shadow-lg transition-all duration-200 pt-0 cursor-pointer">
-			<div className="aspect-video relative overflow-hidden rounded-t-lg">
-				<Image
-					src={"/placeholder.svg"}
-					alt={post.title}
-					fill
-					className="object-cover group-hover:scale-105 transition-transform duration-200"
-				/>
-			</div>
-			<CardHeader className="pb-3">
-				<div className="flex items-center justify-between mb-2">
-					<Badge variant="secondary">{post.category}</Badge>
-					<span className="text-sm text-muted-foreground">{post.readTime}</span>
+		const CardInner = (
+			<Card className="group hover:shadow-lg transition-all duration-200 pt-0 cursor-pointer">
+				<div className="aspect-video relative overflow-hidden rounded-t-lg">
+					<Image
+						src={post.image || "/placeholder.svg"}
+						alt={post.title}
+						fill
+						unoptimized
+						className="object-cover group-hover:scale-105 transition-transform duration-200"
+					/>
 				</div>
-				<CardTitle className="group-hover:text-primary transition-colors">
-					{post.title}
-				</CardTitle>
-				<CardDescription className="">{post.excerpt}</CardDescription>
-			</CardHeader>
-			<CardContent className="pt-0">
-				<div className="flex items-center justify-between">
-					<div className="flex items-center space-x-2">
-						<Avatar className="h-6 w-6">
-							<AvatarImage
-								src={post.authorAvatar || "/placeholder.svg"}
-								alt={post.author}
-							/>
-							<AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
-						</Avatar>
-						<span className="text-sm text-muted-foreground">{post.author}</span>
+				<CardHeader className="pb-3">
+					<div className="flex items-center justify-between mb-2">
+						<Badge variant="secondary">{post.category}</Badge>
+						<span className="text-sm text-muted-foreground">
+							{post.readTime}
+						</span>
 					</div>
-					<span className="text-sm text-muted-foreground">
-						{new Date(post.publishedAt).toLocaleDateString()}
-					</span>
-				</div>
-				<div className="flex flex-wrap gap-1 mt-3">
-					{post.tags.slice(0, 3).map((tag) => (
-						<Badge key={tag} variant="outline" className="text-xs">
-							{tag}
-						</Badge>
-					))}
-				</div>
-			</CardContent>
-		</Card>
-	);
-
-	const BlogPostListItem = ({ post }: { post: BlogPost }) => (
-		<Card className="group hover:shadow-md transition-all duration-200 cursor-pointer">
-			<CardContent className="p-6">
-				<div className="flex gap-4">
-					<div className="relative w-32 h-20 flex-shrink-0 rounded-lg overflow-hidden">
-						<Image
-							src={"/placeholder.svg"}
-							alt={post.title}
-							fill
-							className="object-cover group-hover:scale-105 transition-transform duration-200"
-						/>
-					</div>
-					<div className="flex-1 min-w-0">
-						<div className="flex items-center justify-between mb-2">
-							<Badge variant="secondary">{post.category}</Badge>
+					<CardTitle className="group-hover:text-primary transition-colors">
+						{post.title}
+					</CardTitle>
+					<CardDescription>{post.excerpt}</CardDescription>
+				</CardHeader>
+				<CardContent className="pt-0">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center space-x-2">
+							<Avatar className="h-6 w-6">
+								<AvatarImage
+									src={
+										post?.author?.avatar ??
+										`https://randomuser.me/api/portraits/lego/5.jpg`
+									}
+									alt={post.author?.user_name || "Author"}
+								/>
+								<AvatarFallback>
+									{post.author?.user_name?.charAt(0)}
+								</AvatarFallback>
+							</Avatar>
 							<span className="text-sm text-muted-foreground">
-								{post.readTime}
+								{post.author?.user_name}
 							</span>
 						</div>
-						<h3 className="font-semibold text-lg mb-2 group-hover:text-foreground transition-colors">
-							{post.title}
-						</h3>
-						<p className="text-muted-foreground text-sm mb-3">{post.excerpt}</p>
-						<div className="flex items-center justify-between">
-							<div className="flex items-center space-x-2">
-								<Avatar className="h-5 w-5">
-									<AvatarImage
-										src={post.authorAvatar || "/placeholder.svg"}
-										alt={post.author}
-									/>
-									<AvatarFallback>{post.author.charAt(0)}</AvatarFallback>
-								</Avatar>
-								<span className="text-sm text-muted-foreground">
-									{post.author}
-								</span>
-								<span className="text-sm text-muted-foreground">•</span>
-								<span className="text-sm text-muted-foreground">
-									{new Date(post.publishedAt).toLocaleDateString()}
-								</span>
-							</div>
-							<div className="flex gap-1">
-								{post.tags.slice(0, 2).map((tag) => (
-									<Badge key={tag} variant="outline" className="text-xs">
-										{tag}
-									</Badge>
-								))}
-							</div>
-						</div>
+						<span className="text-sm text-muted-foreground">
+							{new Date(
+								post.publishedAt || post.createdAt,
+							).toLocaleDateString()}
+						</span>
 					</div>
-				</div>
-			</CardContent>
-		</Card>
-	);
+					<div className="flex items-center justify-between gap-4">
+						<div className="flex flex-wrap gap-1 mt-3 flex-1">
+							{post.tags?.slice(0, 3).map((tag: string) => (
+								<Badge key={tag} variant="outline" className="text-xs">
+									{tag}
+								</Badge>
+							))}
+						</div>
+
+						{isAuthor && (
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button size="icon" variant="ghost" className="mt-2">
+										<DotsVerticalIcon />
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent>
+									<DropdownMenuItem asChild>
+										<Link href={`/${post?.id}`}>
+											<EyeIcon className="h-4 w-4 mr-2" />
+											View
+										</Link>
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => {
+											setSelectedPost(post);
+											setShowDialog("edit");
+										}}
+									>
+										<PenIcon className="h-4 w-4 mr-2" />
+										Edit
+									</DropdownMenuItem>
+
+									<DropdownMenuItem
+										className="!text-destructive"
+										onClick={() => {
+											setSelectedPost(post);
+											setShowDialog("delete");
+										}}
+									>
+										<TrashIcon className="!text-destructive h-4 w-4 mr-2" />
+										Delete
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						)}
+					</div>
+				</CardContent>
+			</Card>
+		);
+
+		// If not author, wrap whole card in link
+		return isAuthor ? (
+			CardInner
+		) : (
+			<Link href={`/${post.id}`} passHref>
+				{CardInner}
+			</Link>
+		);
+	};
 
 	return (
 		<>
+			{selectedPost && showDialog === "edit" && (
+				<PostEditDialog
+					key={selectedPost?.id}
+					post={selectedPost}
+				></PostEditDialog>
+			)}
+			{selectedPost && showDialog === "delete" && (
+				<DeleteDialog postId={selectedPost?.id}></DeleteDialog>
+			)}
 			{/* Search and Filters */}
 			<div className="flex flex-col sm:flex-row gap-4 mb-8">
 				<div className="relative flex-1">
@@ -299,35 +217,38 @@ export default function Dashboard() {
 						))}
 					</SelectContent>
 				</Select>
-				<div className="flex gap-2">
-					<Button
-						variant={viewMode === "grid" ? "default" : "outline"}
-						size="icon"
-						onClick={() => setViewMode("grid")}
-					>
-						<Grid className="h-4 w-4" />
-					</Button>
-					<Button
-						variant={viewMode === "list" ? "default" : "outline"}
-						size="icon"
-						onClick={() => setViewMode("list")}
-					>
-						<List className="h-4 w-4" />
-					</Button>
-				</div>
 			</div>
 
 			{/* Results Info */}
 			<div className="mb-6">
 				<p className="text-muted-foreground">
-					Showing {currentPosts.length} of {filteredPosts.length} posts
+					Showing {posts.length} of {total} posts
 					{selectedCategory !== "All" && ` in ${selectedCategory}`}
 					{searchQuery && ` matching "${searchQuery}"`}
 				</p>
 			</div>
 
 			{/* Blog Posts */}
-			{currentPosts.length === 0 ? (
+			{postQuery.isLoading ? (
+				<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+					{Array.from({ length: postsPerPage }).map((_, i) => (
+						<Card key={i} className="animate-pulse">
+							<div className="aspect-video bg-muted rounded-t-lg" />
+							<CardHeader className="pb-3">
+								<div className="h-4 w-1/3 bg-muted rounded mb-2" />
+								<div className="h-6 w-2/3 bg-muted rounded mb-2" />
+								<div className="h-4 w-full bg-muted rounded" />
+							</CardHeader>
+							<CardContent>
+								<div className="flex items-center space-x-2">
+									<div className="h-6 w-6 rounded-full bg-muted" />
+									<div className="h-4 w-24 bg-muted rounded" />
+								</div>
+							</CardContent>
+						</Card>
+					))}
+				</div>
+			) : posts.length === 0 ? (
 				<div className="text-center py-12">
 					<p className="text-muted-foreground text-lg">
 						No posts found matching your criteria.
@@ -344,21 +265,12 @@ export default function Dashboard() {
 				</div>
 			) : (
 				<>
-					{viewMode === "grid" ? (
-						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-							{currentPosts.map((post) => (
-								<BlogPostCard key={post.id} post={post} />
-							))}
-						</div>
-					) : (
-						<div className="space-y-4 mb-8">
-							{currentPosts.map((post) => (
-								<BlogPostListItem key={post.id} post={post} />
-							))}
-						</div>
-					)}
+					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+						{posts.map((post) => (
+							<BlogPostCard key={post.id} post={post} />
+						))}
+					</div>
 
-					{/* Pagination */}
 					{totalPages > 1 && (
 						<div className="flex justify-center items-center space-x-2">
 							<Button

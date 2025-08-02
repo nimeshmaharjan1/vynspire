@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
 	try {
-		const { email, password, user_name } = await request.json();
+		const { email, password, user_name, avatar } = await request.json();
 
 		if (!email || !password) {
 			return NextResponse.json(
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
 				email,
 				password: hashedPassword,
 				user_name,
+				avatar,
 			},
 		});
 

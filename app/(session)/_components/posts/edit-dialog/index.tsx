@@ -1,12 +1,11 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Prisma } from "@prisma/client";
+import type { Post, Prisma } from "@prisma/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { AxiosError } from "axios";
 import { AlertCircleIcon, Plus, X } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type FC, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Alert, AlertTitle } from "@/components/ui/alert";
@@ -39,7 +38,7 @@ import {
 } from "@/components/ui/select";
 import { useGlobalStore } from "@/store/global.store";
 import { type PostSchemaType, postSchema } from "../_schema";
-import { createPost } from "../_service";
+import { editPost } from "../_service";
 
 const categories = [
 	"Development",
@@ -50,16 +49,18 @@ const categories = [
 	"DevOps",
 	"Mobile",
 ];
-const PostCreateDialog = () => {
+const PostEditDialog: FC<{ post: Post }> = ({ post }) => {
+	const { setShowDialog, showDialog } = useGlobalStore();
 	const form = useForm<PostSchemaType>({
 		resolver: zodResolver(postSchema),
 		defaultValues: {
-			title: "Prefilled Content for Ease",
-			excerpt:
-				"Advanced TypeScript patterns and best practices for building scalable applications.",
-			content: `<h1 class="heading-node">Why TypeScript?</h1> <p class="text-node">TypeScript enhances JavaScript by adding static typing, giving developers the power to catch errors at compile time rather than during runtime. This early feedback loop makes codebases more predictable, easier to refactor, and significantly more maintainable over time. Teams that adopt TypeScript often find that it improves both onboarding for new developers and long-term scalability for growing applications.</p> <h2 class="heading-node">Mastering Advanced Patterns</h2> <p class="text-node">As projects evolve, developers often encounter complex data structures, conditional logic, and patterns that are difficult to model with plain JavaScript. TypeScript offers powerful features that address these challenges head-on.</p> <p class="text-node">One such feature is <strong>discriminated unions</strong>, which are ideal for modeling related object types that differ in structure but share a common field. For example, when handling API responses that vary based on a status field, discriminated unions make it easier to narrow types and handle edge cases safely.</p> <p class="text-node"><strong>Mapped types</strong> provide a mechanism for creating new types based on existing ones. They enable developers to apply transformations across properties—such as making all fields optional or readonly—without duplicating the shape manually.</p> <p class="text-node"><strong>Conditional types</strong> introduce logic into type definitions, allowing types to change based on input. This is extremely useful for generic libraries, where you want flexible APIs that still offer precise type safety depending on how they're used.</p> <p class="text-node">By mastering these advanced features, developers gain confidence in the reliability of their code. Combined with intelligent tooling and strong editor support, TypeScript becomes more than just a type system—it becomes a development experience that promotes clarity, scalability, and long-term success.</p>`,
-			tags: [{ tag: "TypeScript" }, { tag: "JavaScript" }],
-			category: "Programming",
+			title: post?.title,
+			excerpt: post?.excerpt ?? "",
+			content: post?.content ?? "",
+			tags: post?.tags?.map((t) => ({
+				tag: t,
+			})),
+			category: post?.category ?? "",
 		},
 	});
 	const [tags, setTags] = useState<string[]>([]);
@@ -80,37 +81,39 @@ const PostCreateDialog = () => {
 	const removeTag = (tagToRemove: number) => {
 		tagsArray.remove(tagToRemove);
 	};
-	const router = useRouter();
 	const queryClient = useQueryClient();
 	const mutation = useMutation<
 		Prisma.PostSelect,
 		AxiosError<{ error?: string }>,
 		PostSchemaType
 	>({
-		mutationFn: (payload) => createPost(payload),
-		onSuccess: (data) => {
+		mutationFn: (payload) => editPost({ ...payload, postId: post.id }),
+		onSuccess: () => {
 			queryClient
 				.invalidateQueries({
 					queryKey: ["get-all-posts"],
 				})
+				.then(() => {});
+			queryClient
+				.invalidateQueries({
+					queryKey: ["get-single-post"],
+				})
 				.then(() => {
-					toast.success(`Your post has been published`);
-					router.push(`/${data.id}`);
+					toast.success(`Your post has been updated`);
 					form.reset();
 					setShowDialog(null);
 				});
 		},
 	});
-	const { setShowDialog, showDialog } = useGlobalStore();
 
 	return (
 		<AlertDialog
-			open={showDialog === "create"}
-			onOpenChange={(open) => setShowDialog(open ? "create" : null)}
+			open={showDialog === "edit"}
+			onOpenChange={(open) => setShowDialog(open ? "edit" : null)}
 		>
 			<AlertDialogContent className="min-w-2xl">
 				<AlertDialogHeader>
-					<AlertDialogTitle>Publish New Post</AlertDialogTitle>
+					<AlertDialogTitle>Update Post</AlertDialogTitle>
 				</AlertDialogHeader>
 
 				<Form {...form}>
@@ -263,7 +266,7 @@ const PostCreateDialog = () => {
 								className="w-32"
 								loading={mutation.isPending}
 							>
-								Publish
+								Save Changes
 							</Button>
 						</AlertDialogFooter>
 					</form>
@@ -273,4 +276,4 @@ const PostCreateDialog = () => {
 	);
 };
 
-export default PostCreateDialog;
+export default PostEditDialog;
