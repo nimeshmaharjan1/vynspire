@@ -8,6 +8,7 @@
 		"start": "next start",
 		"lint": "next lint",
 		"prepare": "husky",
+		"postinstall": "prisma generate",
 		"ci:write": "pnpm exec biome check --write .",
 		"ci:check": "pnpm exec biome check ."
 	},
