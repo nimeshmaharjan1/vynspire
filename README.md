@@ -1,36 +1,157 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📝 Vynspire Blog Platform
 
-## Getting Started
+A modern blog platform built with **Next.js**, **Prisma**, and **Supabase**, focusing on clean UI/UX, scalable architecture, and full CRUD functionality with authentication.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🚀 Features
+
+- 🔐 **JWT Auth** using Zustand persist and localStorage
+- ✍️ **Create, Edit, Delete** posts with rich text content
+- 🧠 **Custom Hooks**:
+  - `use-auth.hook.ts` – handles login, logout, auth state
+  - `use-get-all-posts.ts`, `use-get-post.ts` – fetch and view post data
+- 🗃️ **Zustand** for global and auth state management
+- 🎨 **ShadCN UI** + **Tailwind CSS** for clean design
+- 🧪 **Form Handling** via React Hook Form + Zod schema validation
+- 📝 **Rich Text Editor** with TipTap + ShadCN integration
+- 🌗 **Dark/Light Theme** toggle
+- 🔎 **Search & Filter** by category/tag
+- 🔁 **Pagination**
+- ⚙️ **Husky** + **Commitlint** + **Biome** (instead of ESLint/Prettier) for robust formatting & linting
+
+---
+
+## 🧩 Tech Stack
+
+- **Framework**: Next.js 15 (App Router)
+- **Database**: Supabase (PostgreSQL)
+- **ORM**: Prisma
+- **Auth**: JWT with Zustand & localStorage
+- **State Management**: Zustand
+- **Forms**: React Hook Form + Zod
+- **Styling**: TailwindCSS + ShadCN UI
+- **Text Editor**: TipTap
+
+---
+
+## 📂 Project Structure
+
+```
+.
+├── app
+├── components
+├── hooks
+│   ├── auth
+│   │   └── use-auth.hook.ts
+│   └── posts
+│       ├── use-get-all-posts.ts
+│       ├── use-get-post.ts
+│       └── use-mobile.ts
+├── lib
+├── prisma
+├── public
+├── scripts
+├── services
+│   └── posts.services.ts
+├── store
+│   ├── auth
+│   │   └── use-auth.store.ts
+│   └── global.store.ts
+├── types
+├── .env.example
+├── next.config.ts
+├── biome.json
+└── ...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠 Setup & Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Clone the repo
 
-## Learn More
+```bash
+git clone https://github.com/yourname/vynspire-blog.git
+cd vynspire-blog
+```
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Install dependencies
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm install
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. Set up `.env`
 
-## Deploy on Vercel
+Copy `.env.example` to `.env` and update with your credentials (Supabase/PostgreSQL):
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```env
+DB_PASSWORD=your_db_password
+DATABASE_URL=your_supabase_connection_pooling_url
+DIRECT_URL=your_supabase_direct_url
+JWT_SECRET=your_jwt_secret
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 4. Prisma Setup
+
+```bash
+npx prisma generate
+npx prisma migrate deploy
+```
+
+Or during dev:
+
+```bash
+npx prisma migrate dev
+```
+
+### 5. Run Dev Server
+
+```bash
+pnpm dev
+```
+
+---
+
+## 🧪 Testing Features
+
+- ✅ Login / Register with JWT
+- ✅ Create/Edit/Delete blog posts
+- ✅ Search, Filter, Pagination
+- ✅ Light/Dark mode
+- ✅ Validation and rich text content
+- ✅ Protected routes for dashboard actions
+
+---
+
+## 📦 Production Notes
+
+- Use `npx prisma migrate deploy` for applying migrations
+- Set proper `JWT_SECRET`, database credentials in production `.env`
+- Consider using Supabase or your own PostgreSQL setup
+
+---
+
+## 🧹 Tooling & Conventions
+
+- **Biome** for formatting and linting
+- **Husky** + **Commitlint** for commit hygiene
+- **Zod** + **React Hook Form** for validation
+- **ShadCN** + **TailwindCSS** for UI consistency
+
+---
+
+## 🧑‍💻 Author
+
+Developed as part of a frontend take-home test focused on:
+
+- ✅ Custom Hooks
+- ✅ State Management
+- ✅ Authentication
+- ✅ CRUD UI
+- ✅ Code Reusability & Structure
+
+---
+
+Feel free to reach out for improvements or questions.
