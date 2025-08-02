@@ -1,8 +1,25 @@
+
 # 📝 Vynspire Blog Platform
 
 A modern blog platform built with **Next.js**, **Prisma**, and **Supabase**, focusing on clean UI/UX, scalable architecture, and full CRUD functionality with authentication.
 
 ---
+
+## 🌐 Live Demo
+
+Check out the deployed version on Vercel:  
+🔗 [vynspire.vercel.app](https://vynspire.vercel.app/)
+
+---
+
+## ℹ️ Important Note
+
+To ensure a smooth testing experience:
+
+> **Please create a new user and new blog posts manually.**  
+> The existing posts were generated via seed scripts and may not fully reflect the final UI or formatting logic. Manually created content will have correct styles and behavior.
+
+
 
 ## 🚀 Features
 
